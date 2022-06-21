@@ -17,9 +17,9 @@ public class AprenderLanzar : MonoBehaviour
     
     Rigidbody rb;
 
-    public GameObject ShellPrefab, GoombaPrefab;
-    GameObject ShellInstance, GoombaInstance;
-    public GameObject Goomba;
+    public GameObject BulletPrefab, DronePrefab;
+    GameObject BulletInstance, DroneInstance;
+    public GameObject Drone;
     public float Fz=350;
     public float Velocidad_Simulacion = 100;
     public bool lanzado = false, hayEnemigo = false;
@@ -38,9 +38,9 @@ public class AprenderLanzar : MonoBehaviour
         }
         else
         {
-            casosEntrenamiento = new weka.core.Instances(new java.io.FileReader("Assets/Finales_Experiencias_LanzarShell.arff"));
-            saberPredecirFx = (Classifier)SerializationHelper.read("Assets/saberPredecirFxLanzarShellModelo");
-            saberPredecirDistanciaFinal = (Classifier)SerializationHelper.read("Assets/saberPredecirDistanciaFinalLanzarShellModelo");
+            casosEntrenamiento = new weka.core.Instances(new java.io.FileReader("Assets/Arf/Finales_Experiencias_LanzarBullet.arff"));
+            saberPredecirFx = (Classifier)SerializationHelper.read("Assets/M5P/saberPredecirFxLanzarBulletModelo");
+            saberPredecirDistanciaFinal = (Classifier)SerializationHelper.read("Assets/M5P/saberPredecirDistanciaFinalLanzarBulletModelo");
         }
             
 
@@ -52,60 +52,81 @@ public class AprenderLanzar : MonoBehaviour
     {
 
         //Uso de una tabla vac?a:
-        casosEntrenamiento = new weka.core.Instances(new java.io.FileReader("Assets/Iniciales_Experiencias_LanzarShell.arff"));  //Lee fichero con variables. Sin instancias
+        casosEntrenamiento = new weka.core.Instances(new java.io.FileReader("Assets/Arf/Iniciales_Experiencias_LanzarBullet.arff"));  //Lee fichero con variables. Sin instancias
 
         //Uso de una tabla con los datos del ?ltimo entrenamiento:
-        //casosEntrenamiento = new weka.core.Instances(new java.io.FileReader("Assets/Finales_Experiencias_GiroDotYVelocidad.arff"));    //... u otro con muchas experiencias
+        //casosEntrenamiento = new weka.core.Instances(new java.io.FileReader("Assets/Arf/Finales_Experiencias_GiroDotYVelocidad.arff"));    //... u otro con muchas experiencias
 
         if (casosEntrenamiento.numInstances() < 10)
         {
 
-            for (float Fx = -5f; Fx <= 100f;Fx = Fx + 2f)
+            for (float Fx = -50f; Fx <= 50f;Fx = Fx + 10f)
             {
-                for (float disGoombaX = -4; disGoombaX <= 4; disGoombaX += 1f)
+                for(float Fy = -50f; Fy <= 50f; Fy = Fy + 10f)
                 {
-                    for (float disGoombaZ = 2 ; disGoombaZ <= 12; disGoombaZ += 1f)
+                    for (float disDroneX = -10; disDroneX <= 10; disDroneX += 5f)
                     {
-                        GoombaInstance = Instantiate(GoombaPrefab, new Vector3(disGoombaX, 0.5f, disGoombaZ), Quaternion.Euler(0, 45, 0));
-                        transform.LookAt(GoombaInstance.transform.position);
+                        for (float disDroneZ = 10; disDroneZ <= 50; disDroneZ += 10f)
+                        {
+                            for (float disDroneY = 2; disDroneY <= 20; disDroneY += 5f)
+                            {
+                                for (float rotacionY = 0; rotacionY <= 360; rotacionY += 60)
+                                {
+                                    Vector3 distanceDron = new Vector3(disDroneX, disDroneY, disDroneZ);
+                                    Vector3 rotationDron = transform.rotation.eulerAngles + Quaternion.Euler(0, rotacionY, 0).eulerAngles;
+                                    DroneInstance = Instantiate(DronePrefab, distanceDron+transform.position, Quaternion.Euler(rotationDron));
+                                    transform.LookAt(DroneInstance.transform.position);
 
-                        Vector3 forwardGoomba = GoombaInstance.transform.forward;
-                        Vector3 forwardLanzador = transform.forward;
-                        float angulo = Vector3.Angle(forwardGoomba, forwardLanzador);
+                                    BulletInstance = Instantiate(BulletPrefab, transform.position, transform.rotation);
+                                    Rigidbody rbBullet = BulletInstance.GetComponent<Rigidbody>();
+                                    rbBullet.useGravity = false;
 
-                        ShellInstance = Instantiate(ShellPrefab, transform.position, transform.rotation);
-                        Rigidbody rbShell = ShellInstance.GetComponent<Rigidbody>();
-                        Vector3 fuerzaZ = transform.forward * Fz;
-                        Vector3 fuerzaX = transform.right * Fx;
-                        rbShell.AddForce(fuerzaX + fuerzaZ);
-                        
-                        float time = Time.time;
-                        distanciaAnterior = Vector3.Distance(ShellInstance.transform.position, GoombaInstance.transform.position);
-                        distanciaInicial = distanciaAnterior;
-                        
-                        yield return new WaitUntil(() => Time.time - time > Time.deltaTime);
-                        
-                        yield return new WaitUntil(() => seAlejen(ShellInstance, GoombaInstance));
+                                    Vector3 forwardShot = transform.forward;
+                                    Vector3 forwardDrone = DroneInstance.transform.forward;
 
-                        float finalDistanceToGoomba = Vector3.Distance(ShellInstance.transform.position, GoombaInstance.transform.position);
-                        Destroy(GoombaInstance);
-                        Destroy(ShellInstance);
+                                    float angle = Vector3.Angle(forwardDrone, forwardShot);
+                                    float inclinacion = Vector3.Angle(Vector3.forward, forwardShot);
 
-                        Instance casoAaprender = new Instance(casosEntrenamiento.numAttributes());
-                        print("ENTRENAMIENTO: con Fx " + Fx + " y distancia a enemigo  " + distanciaInicial + " y angulo a enemigo " + angulo +" se alcanzo distancia a objetivo de " + finalDistanceToGoomba);
-                        casoAaprender.setDataset(casosEntrenamiento);                          
-                        casoAaprender.setValue(0, Fx);                                         
-                        casoAaprender.setValue(1, distanciaInicial);
-                        casoAaprender.setValue(2, angulo);
-                        casoAaprender.setValue(3, finalDistanceToGoomba);
-                        casosEntrenamiento.add(casoAaprender);                                 
-                        
+                                    Vector3 fuerzaZ = transform.forward * Fz;
+                                    Vector3 fuerzaY = transform.forward * Fy;
+                                    Vector3 fuerzaX = transform.right * Fx;
+                                    rbBullet.AddForce(fuerzaX + fuerzaZ);
+
+                                    float time = Time.time;
+                                    distanciaAnterior = Vector3.Distance(BulletInstance.transform.position, DroneInstance.transform.position);
+                                    distanciaInicial = distanciaAnterior;
+
+                                    yield return new WaitUntil(() => Time.time - time > Time.deltaTime);
+
+                                    yield return new WaitUntil(() => seAlejen(BulletInstance, DroneInstance));
+
+                                    float finalDistanceToDrone = Vector3.Distance(BulletInstance.transform.position, DroneInstance.transform.position);
+                                    Destroy(DroneInstance);
+                                    Destroy(BulletInstance);
+
+                                    Instance casoAaprender = new Instance(casosEntrenamiento.numAttributes());
+                                    print("ENTRENAMIENTO: con Fx: " + Fx + " Fy: " + Fy + " X: " + disDroneX + " Y: " + disDroneY + " Z: " + disDroneZ);
+                                    casoAaprender.setDataset(casosEntrenamiento);
+
+                                    casoAaprender.setValue(0, Fx);
+                                    casoAaprender.setValue(1, Fy);
+                                    casoAaprender.setValue(2, distanciaAnterior);
+                                    casoAaprender.setValue(3, angle);
+                                    casoAaprender.setValue(4, inclinacion);
+                                    casoAaprender.setValue(5, rotationDron.y);
+                                    casoAaprender.setValue(6, finalDistanceToDrone);
+
+                                    casosEntrenamiento.add(casoAaprender);
+                                }
+                                
+                            }
+                        }
                     }
                 }
             }
 
 
-            File salida = new File("Assets/Finales_Experiencias_LanzarShell.arff");
+            File salida = new File("Assets/Arf/Finales_Experiencias_LanzarBullet.arff");
             if (!salida.exists())
                 System.IO.File.Create(salida.getAbsoluteFile().toString()).Dispose();
             ArffSaver saver = new ArffSaver();
@@ -119,24 +140,24 @@ public class AprenderLanzar : MonoBehaviour
         saberPredecirFx = new M5P();                                                
         casosEntrenamiento.setClassIndex(0);                                             
         saberPredecirFx.buildClassifier(casosEntrenamiento);                        
-        SerializationHelper.write("Assets/saberPredecirFxLanzarShellModelo", saberPredecirFx);
+        SerializationHelper.write("Assets/M5P/saberPredecirFxLanzarBulletModelo", saberPredecirFx);
 
         saberPredecirDistanciaFinal = new M5P();
-        casosEntrenamiento.setClassIndex(3);
+        casosEntrenamiento.setClassIndex(6);
         saberPredecirDistanciaFinal.buildClassifier(casosEntrenamiento);
-        SerializationHelper.write("Assets/saberPredecirDistanciaFinalLanzarShellModelo", saberPredecirDistanciaFinal);
+        SerializationHelper.write("Assets/M5P/saberPredecirDistanciaFinalLanzarBulletModelo", saberPredecirDistanciaFinal);
 
         ESTADO = "Con conocimiento";
-        print("uwu");
+        print("FIN");
 
         
     }
 
-    private bool seAlejen(GameObject shellInstance, GameObject goombaInstance)
+    private bool seAlejen(GameObject BulletInstance, GameObject DroneInstance)
     {
 
         bool seAlejan = false;
-        float distanciaActual = Vector3.Distance(ShellInstance.transform.position, GoombaInstance.transform.position);
+        float distanciaActual = Vector3.Distance(BulletInstance.transform.position, DroneInstance.transform.position);
         if (distanciaActual > distanciaAnterior) { 
             seAlejan = true;
         }
@@ -146,34 +167,69 @@ public class AprenderLanzar : MonoBehaviour
 
     void FixedUpdate()                                                                                 
     {
-        if (Goomba != null)
+        if (Drone != null)
         {
-            transform.LookAt(Goomba.transform.position);
+            transform.LookAt(Drone.transform.position);
         }
-        if ((ESTADO == "Con conocimiento") && hayEnemigo && Goomba!=null && Vector3.Distance(Goomba.transform.position, transform.position)<15 && objetivoDelante())
+        if ((ESTADO == "Con conocimiento") && hayEnemigo && Drone!=null && Vector3.Distance(Drone.transform.position, transform.position)<100 && objetivoDelante())
         {
             
-            transform.LookAt(Goomba.transform.position);
+            float mejorFx = 0;
+            float mejorFy = 0;
+            float distanciaAlcanzada;
+            float mejorDistancia = 1000;
+            float Fx = 0;
+
+            for (float Fy = -50; Fy < 50; Fy += 1)
+            {
+                transform.LookAt(Drone.transform.position);
+                Instance casoPrueba = new Instance(casosEntrenamiento.numAttributes());
+                casoPrueba.setDataset(casosEntrenamiento);
+                casoPrueba.setValue(1, Fy);
+                casoPrueba.setValue(2, Drone.transform.position.x - transform.position.x);
+                casoPrueba.setValue(3, Drone.transform.position.y - transform.position.y);
+                casoPrueba.setValue(4, Drone.transform.position.z - transform.position.z);
+                casoPrueba.setValue(5, Drone.transform.rotation.y - transform.rotation.y);
+                casoPrueba.setValue(6, 0);
+                    
+                Fx = (float)saberPredecirFx.classifyInstance(casoPrueba);
+
+                if (Fx > -100 & Fx < 100)
+                {
+                    Instance casoPrueba2 = new Instance(casosEntrenamiento.numAttributes());
+                    casoPrueba2.setDataset(casosEntrenamiento);
+                    casoPrueba2.setValue(1, Fx);
+                    casoPrueba2.setValue(1, Fy);
+                    casoPrueba2.setValue(2, Drone.transform.position.x - transform.position.x);
+                    casoPrueba2.setValue(3, Drone.transform.position.y - transform.position.y);
+                    casoPrueba2.setValue(4, Drone.transform.position.z - transform.position.z);
+                    casoPrueba2.setValue(5, Drone.transform.rotation.y - transform.rotation.y);
+                    
+                    distanciaAlcanzada = (float)saberPredecirDistanciaFinal.classifyInstance(casoPrueba2);
+
+                    if (distanciaAlcanzada < mejorDistancia)
+                    {
+                        mejorFx = Fx;
+                        mejorFy = Fy;
+                        mejorDistancia = distanciaAlcanzada;
+                    }
+                }
+
+                
+            }
+                
+
             
-            Instance casoPrueba = new Instance(casosEntrenamiento.numAttributes());
-            casoPrueba.setDataset(casosEntrenamiento);
+            
 
-            Vector3 forwardGoomba = Goomba.transform.forward;
-            Vector3 forwardLanzador = transform.forward;
-            float angulo = Vector3.Angle(forwardGoomba, forwardLanzador);
-
-            casoPrueba.setValue(1, Vector3.Distance(transform.position, Goomba.transform.position));
-            casoPrueba.setValue(2, angulo);
-            casoPrueba.setValue(3, 0);
-            float mejorFx = (float)saberPredecirFx.classifyInstance(casoPrueba);
-
-            ShellInstance = Instantiate(ShellPrefab, transform.position, transform.rotation);
-            Rigidbody rbShell = ShellInstance.GetComponent<Rigidbody>();
+            BulletInstance = Instantiate(BulletPrefab, transform.position, transform.rotation);
+            Rigidbody rbBullet = BulletInstance.GetComponent<Rigidbody>();
             Vector3 fuerzaZ = transform.forward * Fz;
+            Vector3 fuerzaY = transform.up * mejorFy;
             Vector3 fuerzaX = transform.right * mejorFx;
-            rbShell.AddForce(fuerzaX + fuerzaZ);
+            rbBullet.AddForce(fuerzaX + fuerzaZ + fuerzaY);
             hayEnemigo = false;
-            print("DECISION REALIZADA: Fx " + mejorFx);
+            print("DECISION REALIZADA: Fx " + mejorFx + " Fy: " + mejorFy);
             
         }
 
