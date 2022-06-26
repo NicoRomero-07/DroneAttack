@@ -135,7 +135,7 @@ public class JumpLearning : MonoBehaviour
         {
             movement.jump = false;
             RaycastHit hit;
-            if (Input.GetKey(KeyCode.Space) && controller.isGrounded && Physics.Raycast(transform.position, transform.forward, out hit, 6))
+            if (Input.GetKey(KeyCode.Space) && controller.isGrounded && Physics.Raycast(transform.position, transform.forward, out hit, 15))
             {
                 float altura = calcularAltura();
                 print("ALTURA POR PITAGORAS: " + altura);
