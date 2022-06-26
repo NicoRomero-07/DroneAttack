@@ -45,7 +45,7 @@ GameObject:
   - component: {fileID: 8312395906557199479}
   - component: {fileID: 8312395906557199477}
   - component: {fileID: 8312395906557199478}
-  - component: {fileID: 5668038147917201112}
+  - component: {fileID: 1465580751242420163}
   m_Layer: 0
   m_Name: Jammo_Player
   m_TagString: Player
@@ -185,7 +185,7 @@ MonoBehaviour:
   StartAnimTime: 0.3
   StopAnimTime: 0.15
   verticalVel: -0.5
---- !u!114 &5668038147917201112
+--- !u!114 &1465580751242420163
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -194,16 +194,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 34477519326921376}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2868d31ef14149489c274bb67128e03, type: 3}
+  m_Script: {fileID: 11500000, guid: 94507e025df325d439da856ebda1b55b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BulletPrefab: {fileID: 233393910670591943, guid: 4432f101acd80404ca63b406eec8c6a1, type: 3}
-  DronePrefab: {fileID: 2358681694973213683, guid: 1042e5e94bb9fc949be5ccab632b8f56, type: 3}
-  Drone: {fileID: 0}
-  Fz: 350
+  Fz: 10
+  alturaAlcanzada: 0
   Velocidad_Simulacion: 100
-  lanzado: 0
-  hayEnemigo: 0
 --- !u!1 &93056379637809145
 GameObject:
   m_ObjectHideFlags: 0
@@ -4307,6 +4303,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1067054608484446796}
+  - component: {fileID: 1677540751252245064}
   m_Layer: 0
   m_Name: EyeShot
   m_TagString: Untagged
@@ -4329,6 +4326,25 @@ Transform:
   m_Father: {fileID: 3900439193349861555}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1677540751252245064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7419064146192651844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2868d31ef14149489c274bb67128e03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BulletPrefab: {fileID: 2358681694973213683, guid: 1042e5e94bb9fc949be5ccab632b8f56, type: 3}
+  DronePrefab: {fileID: 233393910670591943, guid: 4432f101acd80404ca63b406eec8c6a1, type: 3}
+  Drone: {fileID: 0}
+  Fz: 1000
+  Velocidad_Simulacion: 100
+  lanzado: 0
+  hayEnemigo: 0
 --- !u!1 &7464521850351246564
 GameObject:
   m_ObjectHideFlags: 0

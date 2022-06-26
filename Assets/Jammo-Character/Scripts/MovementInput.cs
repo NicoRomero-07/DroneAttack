@@ -22,8 +22,15 @@ public class MovementInput : MonoBehaviour {
 	public Camera cam;
 	public CharacterController controller;
 	public bool isGrounded;
+	public bool jump;
 
-    [Header("Animation Smoothing")]
+	private float gravityValue = -9.81f;
+	private Vector3 playerVelocity;
+
+	public float Fy;
+	public float Fz;
+
+	[Header("Animation Smoothing")]
     [Range(0, 1f)]
     public float HorizontalAnimSmoothTime = 0.2f;
     [Range(0, 1f)]
@@ -38,6 +45,7 @@ public class MovementInput : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		jump = false;
 		anim = this.GetComponent<Animator> ();
 		cam = Camera.main;
 		controller = this.GetComponent<CharacterController> ();
@@ -46,19 +54,23 @@ public class MovementInput : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		InputMagnitude ();
-
+		
         isGrounded = controller.isGrounded;
-        if (isGrounded)
-        {
-            verticalVel -= 0;
-        }
-        else
-        {
-            verticalVel -= 1;
-        }
-        moveVector = new Vector3(0, verticalVel * .2f * Time.deltaTime, 0);
-        controller.Move(moveVector);
 
+		if (isGrounded && playerVelocity.y < 0)
+		{
+			playerVelocity.y = 0f;
+		}
+
+		// Changes the height position of the player..
+		if (jump && isGrounded)
+		{
+			playerVelocity.y += Mathf.Sqrt(Fy * -3.0f * gravityValue);
+		}
+
+		playerVelocity.y += gravityValue * Time.deltaTime;
+
+		controller.Move(playerVelocity * Time.deltaTime);
 
     }
 

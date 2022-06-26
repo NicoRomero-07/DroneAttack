@@ -5,24 +5,16 @@ using UnityEngine;
 public class DroneGenerator : MonoBehaviour
 {
     // Start is called before the first frame update
-    private GameObject[] spots;
-    private int randomSpot;
     private double timeUltLanzamiento;
     public GameObject Drone, DroneGenerado;
     private int numSpot;
-    public int frecuenciaAparicion = 5;
+    public int frecuenciaAparicion = 3;
     public GameObject robot;
 
     void Start()
     {
         timeUltLanzamiento = 0;
-        numSpot = gameObject.transform.childCount;
-        spots = new GameObject[numSpot];
-        randomSpot = 3;// Random.Range(0, numSpot);
-        for (int i = 0; i < numSpot; i++)
-        {
-            spots[i] = gameObject.transform.GetChild(i).gameObject;
-        }
+      
         Generar1Drone();
     }
 
@@ -32,7 +24,6 @@ public class DroneGenerator : MonoBehaviour
         if (Time.time - timeUltLanzamiento > frecuenciaAparicion)
         {
             timeUltLanzamiento = Time.time;
-            randomSpot = Random.Range(0, numSpot);
             Generar1Drone();
             Destroy(DroneGenerado, frecuenciaAparicion * 5);
         }
@@ -40,14 +31,15 @@ public class DroneGenerator : MonoBehaviour
 
     void Generar1Drone()
     {
-        Quaternion rotation = spots[randomSpot].transform.rotation;
+        Quaternion rotation = transform.rotation;
         Vector3 rotationEuler = rotation.eulerAngles;
-        float rotY = Random.Range(0, 360);
+        float rotY = Random.Range(-15, 15);
         rotationEuler += new Vector3(0, rotY, 0);
-        float x = Random.Range(-10, 10);
-        float y = Random.Range(2, 20);
-        float z = Random.Range(10, 50);
-        DroneGenerado = Instantiate(Drone, new Vector3(x,y,z), Quaternion.Euler(rotationEuler));
+        float x = Random.Range(-3, 3);
+        float y = Random.Range(2, 4);
+        float z = Random.Range(5, 15);
+        Vector3 desplazamiento = transform.forward*z + transform.right* x +transform.up * y;
+        DroneGenerado = Instantiate(Drone, transform.position + desplazamiento, Quaternion.Euler(rotationEuler));
         robot.GetComponentInChildren<AprenderLanzar>().Drone = DroneGenerado;
         robot.GetComponentInChildren<AprenderLanzar>().hayEnemigo = true;
     }

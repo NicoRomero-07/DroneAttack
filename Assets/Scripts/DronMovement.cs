@@ -31,4 +31,15 @@ public class DronMovement : MonoBehaviour
         rb.AddForce(Vector3.up * fuerzaLevitacion);
 
     }
+    
+    private void OnTriggerEnter(Collider other)
+    {
+        Destroy(this);
+        Destroy(other.gameObject);
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+        Destroy(this);
+    }
+    
 }

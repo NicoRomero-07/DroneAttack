@@ -20,7 +20,7 @@ public class AprenderLanzar : MonoBehaviour
     public GameObject BulletPrefab, DronePrefab;
     GameObject BulletInstance, DroneInstance;
     public GameObject Drone;
-    public float Fz=350;
+    public float Fz=1000;
     public float Velocidad_Simulacion = 100;
     public bool lanzado = false, hayEnemigo = false;
     private float distanciaAnterior;
@@ -60,9 +60,9 @@ public class AprenderLanzar : MonoBehaviour
         if (casosEntrenamiento.numInstances() < 10)
         {
 
-            for (float Fx = -50f; Fx <= 50f;Fx = Fx + 10f)
+            for (float Fx = -100f; Fx <= 100f;Fx = Fx + 50f)
             {
-                for(float Fy = -50f; Fy <= 50f; Fy = Fy + 10f)
+                for(float Fy = 0f; Fy <= 200f; Fy = Fy + 50f)
                 {
                     for (float disDroneX = -10; disDroneX <= 10; disDroneX += 5f)
                     {
@@ -70,7 +70,7 @@ public class AprenderLanzar : MonoBehaviour
                         {
                             for (float disDroneY = 2; disDroneY <= 20; disDroneY += 5f)
                             {
-                                for (float rotacionY = 0; rotacionY <= 360; rotacionY += 60)
+                                for (float rotacionY = -180; rotacionY <= 180; rotacionY += 60)
                                 {
                                     Vector3 distanceDron = new Vector3(disDroneX, disDroneY, disDroneZ);
                                     Vector3 rotationDron = transform.rotation.eulerAngles + Quaternion.Euler(0, rotacionY, 0).eulerAngles;
@@ -88,9 +88,10 @@ public class AprenderLanzar : MonoBehaviour
                                     float inclinacion = Vector3.Angle(Vector3.forward, forwardShot);
 
                                     Vector3 fuerzaZ = transform.forward * Fz;
-                                    Vector3 fuerzaY = transform.forward * Fy;
+                                    Vector3 fuerzaY = transform.up * Fy;
                                     Vector3 fuerzaX = transform.right * Fx;
-                                    rbBullet.AddForce(fuerzaX + fuerzaZ);
+                                    rbBullet.AddForce(fuerzaX + fuerzaY + fuerzaZ );
+
 
                                     float time = Time.time;
                                     distanciaAnterior = Vector3.Distance(BulletInstance.transform.position, DroneInstance.transform.position);
@@ -105,15 +106,15 @@ public class AprenderLanzar : MonoBehaviour
                                     Destroy(BulletInstance);
 
                                     Instance casoAaprender = new Instance(casosEntrenamiento.numAttributes());
-                                    print("ENTRENAMIENTO: con Fx: " + Fx + " Fy: " + Fy + " X: " + disDroneX + " Y: " + disDroneY + " Z: " + disDroneZ);
+                                    print("ENTRENAMIENTO: con Fx: " + Fx + " Fy: " + Fy + " X: " + disDroneX + " Y: " + disDroneY + " Z: " + disDroneZ + "distancia: " + finalDistanceToDrone);
                                     casoAaprender.setDataset(casosEntrenamiento);
 
                                     casoAaprender.setValue(0, Fx);
                                     casoAaprender.setValue(1, Fy);
-                                    casoAaprender.setValue(2, distanciaAnterior);
-                                    casoAaprender.setValue(3, angle);
-                                    casoAaprender.setValue(4, inclinacion);
-                                    casoAaprender.setValue(5, rotationDron.y);
+                                    casoAaprender.setValue(2, DroneInstance.transform.position.x - transform.position.x);
+                                    casoAaprender.setValue(3, DroneInstance.transform.position.y - transform.position.y);
+                                    casoAaprender.setValue(4, DroneInstance.transform.position.z - transform.position.z);
+                                    casoAaprender.setValue(5, angle);
                                     casoAaprender.setValue(6, finalDistanceToDrone);
 
                                     casosEntrenamiento.add(casoAaprender);
@@ -147,7 +148,6 @@ public class AprenderLanzar : MonoBehaviour
         saberPredecirDistanciaFinal.buildClassifier(casosEntrenamiento);
         SerializationHelper.write("Assets/M5P/saberPredecirDistanciaFinalLanzarBulletModelo", saberPredecirDistanciaFinal);
 
-        ESTADO = "Con conocimiento";
         print("FIN");
 
         
@@ -171,7 +171,7 @@ public class AprenderLanzar : MonoBehaviour
         {
             transform.LookAt(Drone.transform.position);
         }
-        if ((ESTADO == "Con conocimiento") && hayEnemigo && Drone!=null && Vector3.Distance(Drone.transform.position, transform.position)<100 && objetivoDelante())
+        if ((ESTADO == "Con conocimiento") && Drone!=null && Vector3.Distance(Drone.transform.position, transform.position)<100 && objetivoDelante() && Input.GetMouseButtonDown(0))
         {
             
             float mejorFx = 0;
@@ -180,30 +180,37 @@ public class AprenderLanzar : MonoBehaviour
             float mejorDistancia = 1000;
             float Fx = 0;
 
-            for (float Fy = -50; Fy < 50; Fy += 1)
+            for (float Fy = -10; Fy < 120; Fy += 1)
             {
                 transform.LookAt(Drone.transform.position);
                 Instance casoPrueba = new Instance(casosEntrenamiento.numAttributes());
+
+                Vector3 forwardShot = transform.forward;
+                Vector3 forwardDrone = Drone.transform.forward;
+
+                float angle = Vector3.Angle(forwardDrone, forwardShot);
+                float inclinacion = Vector3.Angle(Vector3.forward, forwardShot);
+
                 casoPrueba.setDataset(casosEntrenamiento);
                 casoPrueba.setValue(1, Fy);
                 casoPrueba.setValue(2, Drone.transform.position.x - transform.position.x);
                 casoPrueba.setValue(3, Drone.transform.position.y - transform.position.y);
                 casoPrueba.setValue(4, Drone.transform.position.z - transform.position.z);
-                casoPrueba.setValue(5, Drone.transform.rotation.y - transform.rotation.y);
+                casoPrueba.setValue(5, angle);
                 casoPrueba.setValue(6, 0);
                     
                 Fx = (float)saberPredecirFx.classifyInstance(casoPrueba);
 
-                if (Fx > -100 & Fx < 100)
+                if (Fx > -10000 & Fx < 10000)
                 {
                     Instance casoPrueba2 = new Instance(casosEntrenamiento.numAttributes());
                     casoPrueba2.setDataset(casosEntrenamiento);
-                    casoPrueba2.setValue(1, Fx);
+                    casoPrueba2.setValue(0, Fx);
                     casoPrueba2.setValue(1, Fy);
                     casoPrueba2.setValue(2, Drone.transform.position.x - transform.position.x);
                     casoPrueba2.setValue(3, Drone.transform.position.y - transform.position.y);
                     casoPrueba2.setValue(4, Drone.transform.position.z - transform.position.z);
-                    casoPrueba2.setValue(5, Drone.transform.rotation.y - transform.rotation.y);
+                    casoPrueba2.setValue(5, angle);
                     
                     distanciaAlcanzada = (float)saberPredecirDistanciaFinal.classifyInstance(casoPrueba2);
 
@@ -217,17 +224,13 @@ public class AprenderLanzar : MonoBehaviour
 
                 
             }
-                
 
-            
-            
-
-            BulletInstance = Instantiate(BulletPrefab, transform.position, transform.rotation);
+            BulletInstance = Instantiate(BulletPrefab, transform.position, new Quaternion(0,0,0,0));
             Rigidbody rbBullet = BulletInstance.GetComponent<Rigidbody>();
             Vector3 fuerzaZ = transform.forward * Fz;
             Vector3 fuerzaY = transform.up * mejorFy;
             Vector3 fuerzaX = transform.right * mejorFx;
-            rbBullet.AddForce(fuerzaX + fuerzaZ + fuerzaY);
+            rbBullet.AddForce(fuerzaX + fuerzaY + fuerzaZ);
             hayEnemigo = false;
             print("DECISION REALIZADA: Fx " + mejorFx + " Fy: " + mejorFy);
             
